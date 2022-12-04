@@ -61,11 +61,6 @@ platform :ios do
       workspace: "CICDTest.xcworkspace",
       scheme: "CICDTest"
       output_name: "CICD.ipa",  # specify the name of the .ipa file to generate (including file extension)
-      export_options: {
-        provisioningProfiles: { 
-            DEVELOPER_APP_ID => PROVISIONING_PROFILE_SPECIFIER
-        }
-      }
     )
   end
 end
