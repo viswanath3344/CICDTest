@@ -13,11 +13,47 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
+
 default_platform(:ios)
+
+DEVELOPER_APP_ID = ENV["DEVELOPER_APP_ID"]
+DEVELOPER_APP_IDENTIFIER = ENV["DEVELOPER_APP_IDENTIFIER"]
+PROVISIONING_PROFILE_SPECIFIER = ENV["PROVISIONING_PROFILE_SPECIFIER"]
+
+def delete_temp_keychain(name)
+  delete_keychain(
+    name: name
+  ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
+end
+
+def create_temp_keychain(name, password)
+  create_keychain(
+    name: name,
+    password: password,
+    unlock: true,
+    lock_when_sleeps: true,
+    timeout: 3600
+  )
+end
+
+def ensure_temp_keychain(name, password)
+  delete_temp_keychain(name)
+  create_temp_keychain(name, password)
+end
 
 platform :ios do
   desc "Description of what the lane does"
   lane :build_app do
+    keychain_name = "raveena"
+    keychain_password = "apple123"
+    ensure_temp_keychain(keychain_name, keychain_password)
+    
+    setup_ci
+    sync_code_signing(  
+      type: "appstore",
+      readonly: is_ci
+    )
+    
     # add actions here: https://docs.fastlane.tools/actions
    
     gym(
@@ -25,6 +61,11 @@ platform :ios do
       workspace: "CICDTest.xcworkspace",
       scheme: "CICDTest"
       output_name: "CICD.ipa",  # specify the name of the .ipa file to generate (including file extension)
+      export_options: {
+        provisioningProfiles: { 
+            DEVELOPER_APP_ID => PROVISIONING_PROFILE_SPECIFIER
+        }
+      }
     )
   end
 end
